@@ -1,0 +1,25 @@
+- name: Find all files in the folder - delete-files.yml     
+  win_find:        
+    paths: "{{ mypath }}"       
+    recurse: true
+    hidden: true       
+    file_type: file      
+  register: files_to_delete
+  tags: 
+  - clean-files
+  - windows-out-clean-temp
+
+#- name: Print variable
+#  debug:
+#    msg: '{{ files_to_delete }}'
+#  tags: debug-servers
+
+- name: Delete the files - delete-files.yml    
+  #no_log: true
+  win_file:        
+    path: '{{ files_loop.path }}'        
+    state: absent    
+  with_items: '{{ files_to_delete.files }}'
+  loop_control:
+    loop_var: files_loop
+  tags: windows-out-clean-temp

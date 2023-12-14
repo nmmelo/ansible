@@ -1,0 +1,11 @@
+---
+- name: Print variable 2
+  debug:
+    msg: '{{ inventory_hostname }}'
+  tags: 
+  - debug-servers
+  - windows-out-clean-temp
+
+- name: Call subtasks to delete folder
+  include: subtask.yml
+  tags: windows-out-clean-temp

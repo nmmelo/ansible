@@ -1,0 +1,21 @@
+- name: Find all Directory in the folder - delete-folder.yml     
+  win_find:        
+    paths: "{{ mypath }}"
+    recurse: true
+    hidden: true       
+    file_type: directory      
+  register: folder_to_delete
+  tags: windows-out-clean-temp
+
+#- name: Print variable
+#  debug:
+#    msg: '{{folder_to_delete}}'
+#  tags: debug-servers
+
+- name: Delete the Folders - delete-folder.yml     
+  #no_log: true
+  win_file:        
+    path: '{{ item.path }}'        
+    state: absent     
+  with_items: '{{ folder_to_delete.files }}'
+  tags: windows-out-clean-temp

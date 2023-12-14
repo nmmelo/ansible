@@ -1,0 +1,41 @@
+- name: Stop W3SVC Service
+  ansible.windows.win_service:
+    name: W3SVC
+    state: stopped
+  tags: 
+  - W3SVC-Service-Stop
+  - windows-out-clean-temp
+
+- name: Stop IIS Service
+  ansible.windows.win_service:
+    name: IISADMIN
+    state: stopped
+  tags: 
+  - IIS-Service-Stop
+  - windows-out-clean-temp
+
+- name: Find all files in the folder      
+  include: delete-files.yml
+  tags: 
+  - clean-files
+  - windows-out-clean-temp
+
+- name: Find all Directory in the folder      
+  include: delete-folder.yml
+  tags: windows-out-clean-temp
+
+- name: Start IIS Service
+  ansible.windows.win_service:
+    name: IISADMIN
+    state: started
+  tags: 
+  - IIS-Service-Start
+  - windows-out-clean-temp
+
+- name: Start W3SVC Service
+  ansible.windows.win_service:
+    name: W3SVC
+    state: started
+  tags: 
+   - W3SVC-Service-Start
+   - windows-out-clean-temp
