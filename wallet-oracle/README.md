@@ -28,9 +28,9 @@ wallet_password: XXXXXXXXXXXXXwallet_name: "fapdb"
 wallet_base: "/oracle/wallets"
 wallet_path: "/oracle/wallets/name_wallet"
 oracle_base: "/oracle"
-oracle_home: "/oracle/app/oracle/product/19c/db"
-orapki_path: "/oracle/app/oracle/product/19c/db/bin"
-mkstore_path: "/oracle/app/oracle/product/19c/db/bin"
+oracle_home: "$ORACLE_HOME"
+orapki_path: "$ORACLE_HOME/bin"
+mkstore_path: "$ORACLE_HOME/bin"
 certificate_ca_dn: CN=USERTrust RSA Certification Authority,O=The USERTRUST Network,L=Jersey City,ST=New Jersey,C=US
 certificate_subca_dn: CN=Sectigo RSA Domain Validation Secure Server CA,O=Sectigo Limited,L=Salford,ST=Greater Manchester,C=GB
 wallet_password: XXXXXX
