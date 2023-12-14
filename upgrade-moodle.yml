@@ -1,0 +1,6 @@
+---
+- name: Upgrade a plataforma Moodle v2
+  hosts: moodle
+  become: true
+  roles:
+    - upgrade-moodle
