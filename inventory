@@ -1,3 +1,6 @@
 [Lab]
 hostname1 ansible_python_interpreter=/bin/python3
 hostname2 ansible_python_interpreter=/bin/python3
+
+[windows_server]
+hostname1 ansible_connection=ssh ansible_shell_type=cmd ansible_ssh_transfer_method=scp
