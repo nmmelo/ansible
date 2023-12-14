@@ -1,0 +1,37 @@
+apache_path: "/var/www/"
+moodle_path: "/var/www/moodle"
+moodle_old: "/var/www/moodle_old"
+folder_zip: "/tmp"
+moodle_url: "https://packaging.moodle.org/stable401/moodle-latest-401.zip"
+moodle_file: "moodle-latest.zip"
+http_proxy: "http://example-proxy01.com:8080/"
+https_proxy: "http://example-proxy01.com:8080/"
+moodle_blocks:
+- attendance
+- admin_presets
+- checklist
+- quickmail
+moodle_mod:
+- attendance
+- customcert
+- checklist
+- hotpot
+- hvp
+- icontent
+- journal
+- lightboxgallery
+- mindmap
+- pcast
+- questionnaire
+- revealjs
+- scheduler
+moodle_theme:
+- fap
+- bootstrapbase
+- adaptable
+moodle_local:
+- mailtest
+- contact
+- catdup
+moodle_admin:
+- mergeusers

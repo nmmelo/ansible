@@ -1,0 +1,12 @@
+- name: Copy "{{ type }}" Plugins from old installation folder
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{path_old}}/{{ type }}/{{item}}/"
+    dest: "{{ path_new }}/{{ type }}/{{item}}/"
+    owner: root
+    group: root
+  with_items: "{{plugin}}"
+  become: true
+  tags: 
+  - copy-plugins-moodle
+  - upgrade-by-file

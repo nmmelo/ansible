@@ -1,0 +1,263 @@
+---
+# Caso queira instalar uma versão expecífica do moodle é necessário colocar no servidor de moodle o ficheiro zip /tmp/moodle-latest.zip
+# e executar este playbook com a opção ansible-playbook upgrade-moodle.yml --tags upgrade-by-file, 
+# se for por download é colocar na ansible-playbook upgrade-moodle.yml --tags upgrade-by-url
+# Colocar o moodle em modo manutenção
+- name: Enable maintenance Moodle
+  shell: 
+    cmd: sudo php "{{ moodle_path }}/admin/cli/maintenance.php" --enable
+  register: command_result
+  become: true
+  tags:
+  - Enable-maintenance-Moodle
+  - upgrade-by-file
+  - upgrade-by-url
+
+#Verificar se existe a pasta moodle
+- name: Check if folder exists
+  ansible.builtin.stat:
+    path: "{{ moodle_path }}"
+  register: check_folder_name
+  tags:
+  - check-folder-exists 
+  - upgrade-by-file
+  - upgrade-by-url
+
+#Verificar se existe a pasta moodle_old
+- name: Check if Old folder exists
+  ansible.builtin.stat:
+    path: "{{ moodle_old }}"
+  register: check_folder_old_name
+  tags:
+  - check-old-folder-exists 
+  - upgrade-by-file
+  - upgrade-by-url
+
+#Remover a pasta antiga do moodle_old
+- name: Remove old folder
+  ansible.builtin.file:
+    path: "{{ moodle_old }}"
+    state: absent
+  when: check_folder_old_name.stat.exists
+  tags:
+  - remove-old-folder 
+  - upgrade-by-file
+  - upgrade-by-url
+
+#Copiar a versão antiga do moodle para a pasta moodle_old
+- name: Copy folder with new name
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ moodle_path }}/"
+    dest: "{{ moodle_old }}"
+    owner: root
+    group: root
+    mode: '0775'
+  when: check_folder_name.stat.exists
+  become: true
+  tags:
+  - copy-folder-new-name 
+  - upgrade-by-file
+  - upgrade-by-url
+
+#Remover o /var/www/moodle
+- name: Remove old folder
+  ansible.builtin.file:
+    path: "{{ moodle_path }}"
+    state: absent
+  when: check_folder_name.stat.exists
+  tags:
+  - remove-new-folder 
+  - upgrade-by-file
+  - upgrade-by-url
+
+#Fazer o download da last version do moodle
+- name: Download Last Moodle Versions
+  ansible.builtin.get_url:
+    url:  "{{ moodle_url }}"
+    dest: /tmp/moodle-latest.zip
+    mode: '0644'
+    use_proxy: yes
+  environment:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+  tags: 
+  - Download-moodle
+  - upgrade-by-url
+
+#Fazer o unzip do ficheiro do moodle de /home/adminssc/software/ para /var/www/moodle
+- name: Unzip moodle-latest.zip to /var/www/moodle
+  ansible.builtin.unarchive:
+    src: '/tmp/moodle-latest.zip'
+    dest: "{{apache_path}}"
+    remote_src: yes
+    owner: root
+    group: root
+  tags: 
+    - copy_moodle_zip
+    - upgrade-by-file
+    - upgrade-by-url
+
+# Verificar se existe o config.php de /var/www/moodle_old/config.php
+- name: Check if config.php file exists 
+  ansible.builtin.stat:
+    path: "{{moodle_old}}/config.php"
+  register: config_file_status
+  tags:
+  - config_file_status
+  - upgrade-by-file
+  - upgrade-by-url
+
+# Copiar o config.php de /var/www/moodle_old/config.php para /var/www/moodle
+- name: Copy config.php file from old installation folder
+  ansible.builtin.copy:
+    remote_src: true
+    src: "{{ moodle_old}}/config.php"
+    dest: "{{ moodle_path }}/config.php"
+    owner: root
+    group: root
+  when: config_file_status.stat.exists
+  become: true
+  tags: 
+  - copy-config-file
+  - upgrade-by-file
+  - upgrade-by-url
+
+# Copiar os blocks de /var/www/moodle_old/blocks para /var/www/moodle/blocks
+- name: Copy blocks from old installation folder
+  include: copy.yml
+  vars:
+    path_old: "{{ moodle_old }}"
+    path_new: "{{ moodle_path }}"
+    plugin: "{{ moodle_blocks }}"
+    type: "blocks"
+  ignore_errors: True
+  tags: 
+  - copy-blocks-moodle
+  - upgrade-by-file
+  - upgrade-by-url
+
+# Copiar os mod de /var/www/moodle_old/mod para /var/www/moodle/mod
+- name: Copy mod from old installation folder
+  include: copy.yml
+  vars:
+    path_old: "{{ moodle_old }}"
+    path_new: "{{ moodle_path }}"
+    plugin: "{{ moodle_mod }}"
+    type: "mod"
+  ignore_errors: True
+  tags: 
+  - copy-mod-moodle
+  - upgrade-by-file
+  - upgrade-by-url
+
+# Copiar os themes de /var/www/moodle_old/themes para /var/www/moodle/themes
+- name: Copy theme from old installation folder
+  include: copy.yml
+  vars:
+    path_old: "{{ moodle_old }}"
+    path_new: "{{ moodle_path }}"
+    plugin: "{{ moodle_theme }}"
+    type: "theme"
+  ignore_errors: True
+  tags: 
+  - copy-theme-moodle
+  - upgrade-by-file
+  - upgrade-by-url
+
+# Copiar os local de /var/www/moodle_old/local para /var/www/moodle/local
+- name: Copy local from old installation folder
+  include: copy.yml
+  vars:
+    path_old: "{{ moodle_old }}"
+    path_new: "{{ moodle_path }}"
+    plugin: "{{ moodle_local }}"
+    type: "local"
+  ignore_errors: True
+  tags: 
+  - copy-local-moodle
+  - upgrade-by-file
+  - upgrade-by-url
+
+# Copiar os admin tool de /var/www/moodle_old/admin/tool/ para /var/www/moodle/admin/tool/
+- name: Copy admin tool from old installation folder
+  include: copy.yml
+  vars:
+    path_old: "{{ moodle_old }}"
+    path_new: "{{ moodle_path }}"
+    plugin: "{{ moodle_admin }}"
+    type: "admin/tool"
+  ignore_errors: True
+  tags: 
+  - copy-admin-moodle
+  - upgrade-by-file
+  - upgrade-by-url
+
+# Colocar o moodle em modo manutenção
+#- name: Enable maintenance Moodle
+#  shell: 
+#    cmd: sudo php "{{ moodle_path }}/admin/cli/maintenance.php" --enable
+#  register: command_result
+#  become: true
+#  tags:
+#  - Enable-maintenance-Moodle
+#  - upgrade-by-file
+#  - upgrade-by-url
+
+# Verificar se existe block name de /var/www/moodle_old/blocks
+#- name: debug - Enable maintenance Moodle
+#  debug:
+#    msg: "{{ command_result }}"
+#  tags:
+#  - blocks_folder_check
+  #- upgrade-by-file
+  #- upgrade-by-url
+
+# Upgrade ao moodle
+- name: Upgrade maintenance Moodle
+  shell: 
+    cmd: echo s | sudo php "{{ moodle_path }}/admin/cli/upgrade.php" >> /tmp/moodleupgrade.txt
+  register: command_result_upgrade
+  become: true
+  tags:
+  - Upgrade-maintenance-Moodle
+  - upgrade-by-file
+  - upgrade-by-url
+
+# Verificar se existe block name de /var/www/moodle_old/blocks
+- name: debug - Upgrade Moodle
+  debug:
+    msg: "{{ command_result_upgrade }}"
+  tags:
+  - blocks_folder_check
+  #- upgrade-by-file
+  #- upgrade-by-url
+
+# Retirar o moodle do modo manutenção
+- name: Disable maintenance Moodle
+  shell: 
+    cmd: sudo php "{{ moodle_path }}/admin/cli/maintenance.php" --disable
+  register: command_result_disable
+  tags:
+  - Disable-maintenance-Moodle
+  - upgrade-by-file
+  - upgrade-by-url
+
+# Verificar se existe block name de /var/www/moodle_old/blocks
+- name: debug - Disable maintenance Moodle
+  debug:
+    msg: "{{ command_result_disable }}"
+  tags:
+  - blocks_folder_check
+  #- upgrade-by-file
+  #- upgrade-by-url
+
+# Fazer restart do Serviço do Apache2
+- name: Restart Apache2 Service
+  ansible.builtin.service:
+    name: apache2
+    state: restarted
+  tags: 
+  - APACHE2-Service-Restarted
+  - upgrade-by-file
+  - upgrade-by-url
