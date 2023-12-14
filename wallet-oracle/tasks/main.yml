@@ -1,0 +1,125 @@
+---
+# Para autailizar na wallet da DB Oracle o Root e o intermediate
+# Para isso é necessário colocar os dois certificados no Files, em base64
+
+#Verificar se existe a pasta moodle
+- name: Check if folder exists
+  ansible.builtin.stat:
+    path: "{{ wallet_path }}"
+  register: check_folder_name
+  tags:
+  - create-wallet
+  - renew-certificates
+  - check-folder-exists
+  - Oracle
+
+#Create a new Wallet if do not exist
+- name: Create a new Oracle Wallet
+  ansible.builtin.shell:
+    chdir: "{{ wallet_base }}"
+    cmd: '{{ orapki_path}}/orapki wallet create -wallet {{ wallet_base }}/{{ wallet_name }} -pwd {{ wallet_password }} -auto_login'
+  when: not check_folder_name.stat.exists
+  become: true
+  become_user: oracle
+  tags:
+  - create-wallet
+  - create-new-wallet
+
+#Add new credential on the Wallet
+- name: Invoke 
+  include: add_credential.yml
+  vars:
+    wallet: "{{ item.wallets }}"
+  register: command_result
+  when: inventory_hostname == item.hostname
+  with_items: "{{ databases }}"
+  become: true
+  become_user: oracle
+  tags:
+  - create-wallet
+  - add_credintial_wallet
+
+# Verificar se existe block name de /var/www/moodle_old/blocks
+- name: debug - Verificar o ouput
+  debug:
+    msg: "{{ command_result }}"
+  tags:
+  - create-wallet
+
+# Verificar o estado da Wallet
+- name: Verificar estado da Wallet
+  shell:
+    chdir: "{{ wallet_path }}"
+    cmd: '{{ orapki_path}}/orapki wallet display -wallet {{ wallet_path }} -pwd {{ wallet_password }}'
+  no_log: true
+  register: command_result_wallet_state
+  become: true
+  become_user: oracle
+  tags:
+  - renew-certificates
+  - Verificar-wallet-state
+  - Oracle
+
+# Verificar o estado da wallet - output
+- name: debug - Wallet State Output
+  debug:
+    msg: "{{ command_result_wallet_state }}"
+  tags:
+  - renew-certificates
+  - blocks-folder-check
+  - Oracle
+
+# Apagar todos os trusted_cert_all
+- name: Delete All certificate from wallet
+  shell:
+    chdir: "{{ wallet_path }}"
+    cmd: '{{ orapki_path}}/orapki wallet remove -wallet {{ wallet_path }} -trusted_cert_all -pwd {{ wallet_password }}'
+  no_log: true
+  register: command_result_wallet_remove_subca
+  become: true
+  become_user: oracle
+  tags:
+  - renew-certificates
+  - Wallet-remove-all-certificate
+  - Oracle
+
+# Copy the new SUBCA certificate to the /TMP
+- name: Copy NEW SUBCA AND CA CERTIFICATE TO TMP FOLDER
+  ansible.builtin.copy:
+    src: cert/
+    dest: /tmp
+    owner: oracle
+    group: oinstall
+  ignore_errors: True
+  tags:
+  - renew-certificates
+  - copy-cert-wallet
+  - Oracle
+
+# Add a new SUBCA Certificate
+- name: Add NEW SUBCA certificate from wallet
+  shell:
+   chdir: "{{ wallet_path }}"
+   cmd: '{{ orapki_path}}/orapki wallet add -wallet {{ wallet_path }} -trusted_cert -cert /tmp/intermediate.txt -pwd {{ wallet_password }}'
+  register: command_result_wallet_add_subca
+  ignore_errors: True
+  become: true
+  become_user: oracle
+  tags:
+  - renew-certificates
+  - Wallet-add-subca-certificate
+  - Oracle  
+
+# Add a new CA Certificate
+- name: Add NEW CA certificate from wallet
+  shell:
+    chdir: "{{ wallet_path }}"
+    cmd: '{{ orapki_path}}/orapki wallet add -wallet {{ wallet_path }} -trusted_cert -cert /tmp/root.txt -pwd {{ wallet_password }}'
+  register: command_result_wallet_add_ca
+  ignore_errors: True
+  become: true
+  become_user: oracle
+  tags:
+  - renew-certificates
+  - Wallet-add-ca-certificate
+  - Oracle
