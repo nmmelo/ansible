@@ -1,0 +1,6 @@
+- hosts: Lab
+  become: true
+  roles:
+    - wallet-oracle
+  tags:
+  - Oracle
