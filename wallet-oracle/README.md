@@ -19,14 +19,14 @@ The following variables are already defined on the defaults/main.yml file, the f
 
 
 ```
-wallet_path: "/oracle/wallets/fapdb"
+wallet_path: "/oracle/wallets/name_wallet"
 oracle_base: "/oracle"
-oracle_home: "/oracle/app/oracle/product/19c/db"
+oracle_home: "$ORACLE_HOME"
 certificate_ca_dn: CN=USERTrust RSA Certification Authority,O=The USERTRUST Network,L=Jersey City,ST=New Jersey,C=US
 certificate_subca_dn: CN=Sectigo RSA Domain Validation Secure Server CA,O=Sectigo Limited,L=Salford,ST=Greater Manchester,C=GB
 wallet_password: XXXXXXXXXXXXXwallet_name: "fapdb"
 wallet_base: "/oracle/wallets"
-wallet_path: "/oracle/wallets/fapdb"
+wallet_path: "/oracle/wallets/name_wallet"
 oracle_base: "/oracle"
 oracle_home: "/oracle/app/oracle/product/19c/db"
 orapki_path: "/oracle/app/oracle/product/19c/db/bin"
@@ -36,22 +36,22 @@ certificate_subca_dn: CN=Sectigo RSA Domain Validation Secure Server CA,O=Sectig
 wallet_password: XXXXXX
 
 databases:
-  - hostname: "faplab-dboracle01.faplab.pt"
+  - hostname: "hostname1"
     wallets:
-      - tnsnames: "FAPDEVDB"
+      - tnsnames: "TNSNAMES_ENTRY"
         username: "sys" # DBA
         password: "XXXXX"
-      - tnsnames: "ADMINDB"
-        username: "dbbackup"
+      - tnsnames: "TNSNAMES_ENTRY"
+        username: "user_schema"
         password: "XXXXXX"
 
-  - hostname: "faplab-dboraclest.faplab.pt"
+  - hostname: "hostname2"
     wallets:
       - tnsnames: "FAPDEVDB"
         username: "sys" # DBA
         password:  "XXXXXX"
-      - tnsnames: "ADMINDB"
-        username: "dbbackup"
+      - tnsnames: "TNSNAMES_ENTRY"
+        username: "user_schema"
         password: "XXXXXXX"
 
 
