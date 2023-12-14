@@ -1,0 +1,5 @@
+---
+- name: Clean the Temp Folder of IIS
+  hosts: windows_server
+  roles:
+    - windows-out-clean-temp
